@@ -36,7 +36,7 @@ data "aws_vpc" "requestor" {
 
 # Lookup requestor route tables
 data "aws_route_table" "requestor" {
-  count = var.enabled == "true" ? length(distinct(sort(data.aws_subnet_ids.requestor[0].ids))) : 0
+  count     = var.enabled == "true" ? length(distinct(sort(data.aws_subnet_ids.requestor[0].ids))) : 0
   subnet_id = distinct(sort(data.aws_subnet_ids.requestor[0].ids))[count.index]
 }
 
@@ -61,7 +61,7 @@ data "aws_subnet_ids" "acceptor" {
 
 # Lookup acceptor route tables
 data "aws_route_table" "acceptor" {
-  count = var.enabled == "true" ? length(distinct(sort(data.aws_subnet_ids.acceptor[0].ids))) : 0
+  count     = var.enabled == "true" ? length(distinct(sort(data.aws_subnet_ids.acceptor[0].ids))) : 0
   subnet_id = distinct(sort(data.aws_subnet_ids.acceptor[0].ids))[count.index]
 }
 
@@ -71,8 +71,8 @@ resource "aws_route" "requestor" {
     distinct(sort(data.aws_route_table.requestor.*.route_table_id)),
   ) * length(data.aws_vpc.acceptor[0].cidr_block_associations) : 0
   route_table_id = distinct(sort(data.aws_route_table.requestor.*.route_table_id))[ceil(
-      count.index / length(data.aws_vpc.acceptor[0].cidr_block_associations),
-    )]
+    count.index / length(data.aws_vpc.acceptor[0].cidr_block_associations),
+  )]
   destination_cidr_block    = data.aws_vpc.acceptor.0.cidr_block_associations[count.index % length(data.aws_vpc.acceptor[0].cidr_block_associations)]["cidr_block"]
   vpc_peering_connection_id = aws_vpc_peering_connection.default[0].id
   depends_on = [
@@ -87,8 +87,8 @@ resource "aws_route" "acceptor" {
     distinct(sort(data.aws_route_table.acceptor.*.route_table_id)),
   ) * length(data.aws_vpc.requestor[0].cidr_block_associations) : 0
   route_table_id = distinct(sort(data.aws_route_table.acceptor.*.route_table_id))[ceil(
-      count.index / length(data.aws_vpc.requestor[0].cidr_block_associations),
-    )]
+    count.index / length(data.aws_vpc.requestor[0].cidr_block_associations),
+  )]
   destination_cidr_block    = data.aws_vpc.requestor.0.cidr_block_associations[count.index % length(data.aws_vpc.requestor[0].cidr_block_associations)]["cidr_block"]
   vpc_peering_connection_id = aws_vpc_peering_connection.default[0].id
   depends_on = [
